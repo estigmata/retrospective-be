@@ -33,6 +33,16 @@ class ItemModel {
       });
   }
 
+  static getRatesByUser (userId) {
+    const pipeline = [
+      { $unwind: '$rates' },
+      { $match: { 'rates.user': { $eq: userId } } },
+      { $group: { _id: 1, total: { $sum: '$rates.quantity' } } }
+    ];
+    return Item.aggregate(pipeline).
+      then(result => result[0].total);
+  }
+
   static getItemsByQuery (query) {
     return Item.find(query);
   }
@@ -46,6 +56,7 @@ class ItemModel {
           error.status = 404;
           throw error;
         }
+
         if (itemFound.rates.findIndex(rate => rate.user === userId) > -1) {
           return Item.findOneAndUpdate(
             { 'rates.user': userId },
