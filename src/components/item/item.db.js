@@ -32,7 +32,10 @@ const ItemSchema = new Schema(
           trim: true
         },
         quantity: {
-          type: Number
+          type: Number,
+          required: true,
+          max: 5,
+          min: 1
         }
       }
     ]

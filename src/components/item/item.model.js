@@ -40,36 +40,32 @@ class ItemModel {
       { $group: { _id: 1, total: { $sum: '$rates.quantity' } } }
     ];
     return Item.aggregate(pipeline).
-      then(result => result[0].total);
+      then(result => result.length !== 0 ? result[0].total : 0);
   }
 
   static getItemsByQuery (query) {
     return Item.find(query);
   }
 
-  static updateItemRate (itemId, userId, isIncrement) {
+  static getItem (itemId) {
     return Item.findById(itemId).
-      then(itemFound => {
-        if (!itemFound) {
-          const error = new Error('Item could not be found');
-          error.title = 'Item not found';
-          error.status = 404;
-          throw error;
-        }
+      then(itemFound => itemFound);
+  }
 
-        if (itemFound.rates.findIndex(rate => rate.user === userId) > -1) {
-          return Item.findOneAndUpdate(
-            { 'rates.user': userId },
-            { $inc: { 'rates.$.quantity': isIncrement ? 1 : -1 } },
+  static updateItemRate (item, userId, totalVotes) {
+    return Item.findOneAndUpdate(
+      { _id: item._id, 'rates.user': userId },
+      { $set: { 'rates.$.quantity': totalVotes } }
+    ).
+      then(itemUpdated => {
+        if (!itemUpdated) {
+          return Item.findByIdAndUpdate(
+            item._id,
+            { $push: { rates: { user: userId, quantity: totalVotes } } },
             { new: true }
           );
         }
-
-        return Item.findByIdAndUpdate(
-          itemId,
-          { $push: { rates: { user: userId, quantity: 1 } } },
-          { new: true }
-        );
+        return itemUpdated;
       });
   }
 

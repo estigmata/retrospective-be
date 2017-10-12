@@ -27,7 +27,30 @@ class ItemController {
   }
 
   static updateItemRate (req, res, next) {
-    return ItemModel.updateItemRate(req.params.itemId, req.params.userId, req.body.isIncrement).
+    const voteQuantity = req.body.isIncrement ? 1 : -1;
+    let itemFound;
+    let totalVotes;
+    ItemModel.getItem(req.params.itemId).
+      then(item => {
+        if (!item) {
+          const error = new Error('Item could not be found');
+          error.title = 'Item not found';
+          error.status = 404;
+          throw error;
+        }
+        itemFound = item;
+        return ItemModel.getRatesByUser(req.params.userId);
+      }).
+      then(totalRates => {
+        totalVotes = totalRates + voteQuantity;
+        if (totalVotes > 10 && totalVotes < 0) {
+          const error = new Error('Item could not be rate');
+          error.title = 'Rate out of range';
+          error.status = 400;
+          throw error;
+        }
+        return ItemModel.updateItemRate(itemFound, req.params.userId, totalVotes);
+      }).
       then(item => {
         res.send({ data: item }).status(200);
       }).catch(err => next(err));
