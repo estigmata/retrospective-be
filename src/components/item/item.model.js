@@ -52,16 +52,16 @@ class ItemModel {
       then(itemFound => itemFound);
   }
 
-  static updateItemRate (item, userId, totalVotes) {
+  static updateItemRate (item, userId, votes) {
     return Item.findOneAndUpdate(
       { _id: item._id, 'rates.user': userId },
-      { $set: { 'rates.$.quantity': totalVotes } }
+      { $inc: { 'rates.$.quantity': votes } }
     ).
       then(itemUpdated => {
         if (!itemUpdated) {
           return Item.findByIdAndUpdate(
             item._id,
-            { $push: { rates: { user: userId, quantity: totalVotes } } },
+            { $push: { rates: { user: userId, quantity: votes } } },
             { new: true }
           );
         }

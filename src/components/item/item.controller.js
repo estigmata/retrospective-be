@@ -1,6 +1,7 @@
 'use strict';
 
 const ItemModel = require('./item.model');
+const RetrospectiveModel = require('../retrospective/retrospective.model');
 
 class ItemController {
   static addNewItem (req, res, next) {
@@ -29,7 +30,8 @@ class ItemController {
   static updateItemRate (req, res, next) {
     const voteQuantity = req.body.isIncrement ? 1 : -1;
     let itemFound;
-    let totalVotes;
+    let votes;
+    let maxRateByUser;
     ItemModel.getItem(req.params.itemId).
       then(item => {
         if (!item) {
@@ -39,17 +41,21 @@ class ItemController {
           throw error;
         }
         itemFound = item;
+        return RetrospectiveModel.getRetrospective(item.retrospective);
+      }).
+      then(retrospective => {
+        maxRateByUser = retrospective.maxRate;
         return ItemModel.getRatesByUser(req.params.userId);
       }).
       then(totalRates => {
-        totalVotes = totalRates + voteQuantity;
-        if (totalVotes > 10 && totalVotes < 0) {
+        votes = totalRates + voteQuantity;
+        if (votes > maxRateByUser || votes < 0) {
           const error = new Error('Item could not be rate');
           error.title = 'Rate out of range';
           error.status = 400;
           throw error;
         }
-        return ItemModel.updateItemRate(itemFound, req.params.userId, totalVotes);
+        return ItemModel.updateItemRate(itemFound, req.params.userId, voteQuantity);
       }).
       then(item => {
         res.send({ data: item }).status(200);
