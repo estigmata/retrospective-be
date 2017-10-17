@@ -15,7 +15,7 @@ class StrategyTemplateModel {
   }
 
   static getStrategyTemplate (strategyId) {
-    return StrategyTemplate.findById(strategyId, 'name categories').
+    return StrategyTemplate.findById(strategyId).
       then(strategyFounded => {
         if (!strategyFounded) {
           const error = new Error('The Strategy Template with that id does not exist');
@@ -28,7 +28,7 @@ class StrategyTemplateModel {
   }
 
   static getStrategyTemplatesByQuery (query) {
-    return StrategyTemplate.find(query, 'name');
+    return StrategyTemplate.find(query);
   }
 }
 

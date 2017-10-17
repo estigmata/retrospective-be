@@ -4,7 +4,7 @@ const StrategyTemplateModel = require('./strategy-template.model');
 class StrategyTemplateController {
 
   static getOneStrategy (req, res, next) {
-    return StrategyTemplateModel.getStrategyTemplate(req.params.retrospectiveId).
+    return StrategyTemplateModel.getStrategyTemplate(req.params.strategyId).
       then(strategy => {
         res.send({ data: strategy }).status(200);
       }).

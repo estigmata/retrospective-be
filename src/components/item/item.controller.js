@@ -24,42 +24,26 @@ class ItemController {
   static getItems (req, res, next) {
     return ItemModel.getItemsByQuery(req.query).
       then(items => res.send({ data: items }).status(200)).
-      catch(err => next(err));
+      catch(error => next(error));
   }
 
   static updateItemRate (req, res, next) {
     const voteQuantity = req.body.isIncrement ? 1 : -1;
     let itemFound;
-    let votes;
-    let maxRateByUser;
+    let retrospectiveRateByUser;
     ItemModel.getItem(req.params.itemId).
       then(item => {
-        if (!item) {
-          const error = new Error('Item could not be found');
-          error.title = 'Item not found';
-          error.status = 404;
-          throw error;
-        }
         itemFound = item;
         return RetrospectiveModel.getRetrospective(item.retrospective);
       }).
       then(retrospective => {
-        maxRateByUser = retrospective.maxRate;
-        return ItemModel.getRatesByUser(req.params.userId);
+        retrospectiveRateByUser = retrospective.maxRate;
+        return ItemModel.getRatesByUser(itemFound.retrospective, req.params.userId);
       }).
-      then(totalRates => {
-        votes = totalRates + voteQuantity;
-        if (votes > maxRateByUser || votes < 0) {
-          const error = new Error('Item could not be rate');
-          error.title = 'Rate out of range';
-          error.status = 400;
-          throw error;
-        }
-        return ItemModel.updateItemRate(itemFound, req.params.userId, voteQuantity);
-      }).
-      then(item => {
-        res.send({ data: item }).status(200);
-      }).catch(err => next(err));
+      then(userRates => ItemModel.userCanRate(userRates, voteQuantity, retrospectiveRateByUser)).
+      then(() => ItemModel.updateItemRate(itemFound, req.params.userId, voteQuantity)).
+      then(item => res.send({ data: item }).status(200)).
+      catch(error => next(error));
   }
 
   static updateItem (req, res, next) {

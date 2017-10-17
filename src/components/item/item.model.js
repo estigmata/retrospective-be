@@ -33,8 +33,9 @@ class ItemModel {
       });
   }
 
-  static getRatesByUser (userId) {
+  static getRatesByUser (retrospectiveId, userId) {
     const pipeline = [
+      { $match: { 'retrospective': retrospectiveId } },
       { $unwind: '$rates' },
       { $match: { 'rates.user': { $eq: userId } } },
       { $group: { _id: 1, total: { $sum: '$rates.quantity' } } }
@@ -49,24 +50,45 @@ class ItemModel {
 
   static getItem (itemId) {
     return Item.findById(itemId).
-      then(itemFound => itemFound);
+      then(itemFound => {
+        if (!itemFound) {
+          const error = new Error('Item could not be found');
+          error.title = 'Item not found';
+          error.status = 404;
+          throw error;
+        }
+        return itemFound;
+      });
+  }
+
+  static userCanRate (userRates, voteQuantity, retrospectiveRateByUser) {
+    if (
+      (userRates + voteQuantity) > retrospectiveRateByUser ||
+      (userRates + voteQuantity) < 0) {
+      const error = new Error('Item could not be rate');
+      error.title = 'Rate out of range';
+      error.status = 400;
+      return Promise.reject(error);
+    }
+    return Promise.resolve(true);
   }
 
   static updateItemRate (item, userId, votes) {
     return Item.findOneAndUpdate(
-      { _id: item._id, 'rates.user': userId },
-      { $inc: { 'rates.$.quantity': votes } }
-    ).
-      then(itemUpdated => {
-        if (!itemUpdated) {
+      { _id: item._id, 'retrospective': item.retrospective, 'rates.user': userId },
+      { $inc: { 'rates.$.quantity': votes } },
+      { new: true },
+      itemUpdatedByUser => {
+        if (!itemUpdatedByUser) {
           return Item.findByIdAndUpdate(
             item._id,
             { $push: { rates: { user: userId, quantity: votes } } },
             { new: true }
           );
         }
-        return itemUpdated;
-      });
+        return itemUpdatedByUser;
+      }
+    );
   }
 
   static updateItem (itemId, body) {
