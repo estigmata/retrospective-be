@@ -30,7 +30,7 @@ class ItemModel {
     return ActionItem.find(query);
   }
 
-  static gatActionItemById (actionItemId) {
+  static getActionItemById (actionItemId) {
     return ActionItem.findById(actionItemId, 'summary').
       then(actionItem => {
         if (!actionItem) {

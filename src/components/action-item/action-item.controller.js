@@ -22,7 +22,7 @@ class ActionItemController {
   }
 
   static getActionItem (req, res, next) {
-    return ActionItemModel.gatActionItemById(req.params.actionItemId).
+    return ActionItemModel.getActionItemById(req.params.actionItemId).
       then(actionItems => res.send({ data: actionItems }).status(200)).
       catch(next);
   }
