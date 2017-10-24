@@ -1,6 +1,7 @@
 'use strict';
 
 const Item = require('./item.db');
+const ObjectID = require("mongodb").ObjectID;
 
 class ItemModel {
   static createItem (item) {
@@ -35,9 +36,9 @@ class ItemModel {
 
   static getRatesByUser (retrospectiveId, userId) {
     const pipeline = [
-      { $match: { 'retrospective': retrospectiveId } },
+      { $match: { retrospective: ObjectID(retrospectiveId) } },
       { $unwind: '$rates' },
-      { $match: { 'rates.user': { $eq: userId } } },
+      { $match: { 'rates.user': { $eq: ObjectID(userId) } } },
       { $group: { _id: 1, total: { $sum: '$rates.quantity' } } }
     ];
     return Item.aggregate(pipeline).
@@ -103,6 +104,18 @@ class ItemModel {
         return itemUdated;
       });
   }
+
+  static getRatesByItem (retrospectiveId) {
+    const pipe = [
+      { $match: { retrospective: ObjectID(retrospectiveId) } },
+      { $unwind: '$rates' },
+      { $group: { _id: '$_id', summary: { $first: '$summary' }, totalRates: { $sum: '$rates.quantity' } } },
+      { $sort: { totalRates: -1 } }
+    ];
+    return Item.aggregate(pipe).
+      then(result => result);
+  }
+
 }
 
 module.exports = ItemModel;

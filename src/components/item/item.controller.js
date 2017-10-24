@@ -27,6 +27,12 @@ class ItemController {
       catch(error => next(error));
   }
 
+  static getRatesByItem (req, res, next) {
+    return ItemModel.getRatesByItem(req.params.retrospectiveId).
+      then(items => res.send({ data: items }).status(200)).
+      catch(error => next(error));
+  }
+
   static updateItemRate (req, res, next) {
     const voteQuantity = req.body.isIncrement ? 1 : -1;
     let itemFound;
