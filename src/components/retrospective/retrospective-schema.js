@@ -5,6 +5,16 @@ const retrospectiveSchema = {
   'properties': {
     'name': {
       'type': 'string'
+    },
+    'maxRate': {
+      'type': 'number'
+    },
+    'done': {
+      'type': 'boolean'
+    },
+    'currentStep': {
+      'type': 'string',
+      'enum': ['add-items', 'group-items', 'vote-items', 'action-items']
     }
   }
 };

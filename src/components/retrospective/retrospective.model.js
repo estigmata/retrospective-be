@@ -4,7 +4,7 @@ const Retrospective = require('./retrospective.db');
 class RetrospectiveModel {
 
   static getRetrospective (retroId) {
-    return Retrospective.findById(retroId, 'name categories maxRate').
+    return Retrospective.findById(retroId, 'name categories maxRate currentStep').
       then(retrospective => {
         if (!retrospective) {
           const error = new Error('The retrospective with that id does not exist');
@@ -17,6 +17,8 @@ class RetrospectiveModel {
   }
 
   static createRetrospective (retro) {
+    // Delete this attribute from object because in the model the creation date is autogenerate.
+    delete retro.creationDate;
     return Retrospective.create(retro).
       catch(() => {
         const error = new Error('Could not save');
@@ -27,7 +29,7 @@ class RetrospectiveModel {
   }
 
   static getRetrospectiveByQuery (query) {
-    return Retrospective.find(query, 'name').
+    return Retrospective.find(query).
       then(retrospectives => {
         if (!retrospectives.length) {
           const error = new Error('The retrospectives with those params do not exist');
@@ -36,6 +38,19 @@ class RetrospectiveModel {
           throw error;
         }
         return retrospectives;
+      });
+  }
+
+  static updateRetrospective (retrospectiveId, body) {
+    return Retrospective.findByIdAndUpdate(retrospectiveId, { $set: body }, { new: true }).
+      then(RetrospectiveUpdated => {
+        if (!RetrospectiveUpdated) {
+          const error = new Error('Retrospective could not be updated');
+          error.title = 'Retrospective not found';
+          error.status = 404;
+          throw error;
+        }
+        return RetrospectiveUpdated;
       });
   }
 

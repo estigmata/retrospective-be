@@ -1,10 +1,27 @@
 'use strict';
 
 const Item = require('./item.db');
-const ObjectID = require("mongodb").ObjectID;
+const RetrospectiveModel = require('./../retrospective/retrospective.model');
+const objectID = require('mongodb').ObjectID;
 
 class ItemModel {
   static createItem (item) {
+    return Item.create(item).
+      then(itemCreated => Item.findOne(itemCreated).populate('children')).
+      catch(() => {
+        const error = new Error('Item could not be saved');
+        error.title = 'Internal server error';
+        error.status = 500;
+        throw error;
+      });
+  }
+
+  static newItem (params) {
+    const item = {
+      retrospective: params.retrospective,
+      category: params.category,
+      summary: params.summary
+    };
     return Item.create(item).
       then(itemCreated => itemCreated).
       catch(() => {
@@ -34,19 +51,8 @@ class ItemModel {
       });
   }
 
-  static getRatesByUser (retrospectiveId, userId) {
-    const pipeline = [
-      { $match: { retrospective: ObjectID(retrospectiveId) } },
-      { $unwind: '$rates' },
-      { $match: { 'rates.user': { $eq: ObjectID(userId) } } },
-      { $group: { _id: 1, total: { $sum: '$rates.quantity' } } }
-    ];
-    return Item.aggregate(pipeline).
-      then(result => result.length !== 0 ? result[0].total : 0);
-  }
-
   static getItemsByQuery (query) {
-    return Item.find(query);
+    return Item.find(query).populate('children');
   }
 
   static getItem (itemId) {
@@ -62,34 +68,46 @@ class ItemModel {
       });
   }
 
-  static userCanRate (userRates, voteQuantity, retrospectiveRateByUser) {
-    if (
-      (userRates + voteQuantity) > retrospectiveRateByUser ||
-      (userRates + voteQuantity) < 0) {
-      const error = new Error('Item could not be rate');
-      error.title = 'Rate out of range';
-      error.status = 400;
-      return Promise.reject(error);
-    }
-    return Promise.resolve(true);
+  static updateItemRate (itemId, userId, itemRate) {
+    let itemFound;
+    return ItemModel.getItem(itemId).
+      then(item => {
+        itemFound = item;
+        return RetrospectiveModel.getRetrospective(itemFound.retrospective);
+      }).
+      then(retrospective => {
+        itemRate.retrospectiveRate = retrospective.maxRate;
+        return itemFound.updateRate({ userId, itemRate });
+      }).
+      catch(errorDescription => {
+        const error = new Error(errorDescription);
+        error.title = 'Rate out of range';
+        error.status = 400;
+        throw error;
+      });
   }
 
-  static updateItemRate (item, userId, votes) {
-    return Item.findOneAndUpdate(
-      { _id: item._id, 'retrospective': item.retrospective, 'rates.user': userId },
-      { $inc: { 'rates.$.quantity': votes } },
-      { new: true },
-      itemUpdatedByUser => {
-        if (!itemUpdatedByUser) {
-          return Item.findByIdAndUpdate(
-            item._id,
-            { $push: { rates: { user: userId, quantity: votes } } },
-            { new: true }
-          );
-        }
-        return itemUpdatedByUser;
-      }
-    );
+  static updateItemRateByUser (itemId, params) {
+    let itemFound;
+    const userId = params.userId;
+    const itemRate = {
+      'voteQuantity': params.isIncrement ? 1 : -1
+    };
+    return ItemModel.getItem(itemId).
+      then(item => {
+        itemFound = item;
+        return RetrospectiveModel.getRetrospective(itemFound.retrospective);
+      }).
+      then(retrospective => {
+        itemRate.retrospectiveRate = retrospective.maxRate;
+        return itemFound.updateRate({ userId, itemRate });
+      }).
+      catch(errorDescription => {
+        const error = new Error(errorDescription);
+        error.title = 'Rate out of range';
+        error.status = 400;
+        throw error;
+      });
   }
 
   static updateItem (itemId, body) {
@@ -101,21 +119,32 @@ class ItemModel {
           error.status = 404;
           throw error;
         }
-        return itemUdated;
+        return Item.findOne(itemUdated).populate('children');
       });
   }
 
-  static getRatesByItem (retrospectiveId) {
-    const pipe = [
-      { $match: { retrospective: ObjectID(retrospectiveId) } },
-      { $unwind: '$rates' },
-      { $group: { _id: '$_id', summary: { $first: '$summary' }, totalRates: { $sum: '$rates.quantity' } } },
-      { $sort: { totalRates: -1 } }
-    ];
-    return Item.aggregate(pipe).
-      then(result => result);
+  static getItemsWithRatesByUser (retrospectiveId, userId) {
+    return Item.find({ retrospective: objectID(retrospectiveId) }).
+      populate('children').
+      then(items => items.map(item => {
+        const rate = item.rates.map(itemRate => {
+          if (itemRate.user === userId) {
+            return itemRate.quantity;
+          }
+          return 0;
+        }).filter(votes => votes > 0);
+        return {
+          '_id': item._id,
+          'retrospective': item.retrospective,
+          'category': item.category,
+          'summary': item.summary,
+          'rates': item.rates,
+          'children': item.children,
+          'parent': item.parent,
+          'userRate': rate.length === 1 ? rate[0] : 0
+        };
+      }));
   }
-
 }
 
 module.exports = ItemModel;

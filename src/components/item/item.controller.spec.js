@@ -39,7 +39,7 @@ describe('Item controller', () => {
         retrospective: '59ce7c44534d95403f1ded42',
         category: '59ce7c44534d95403f1ded44',
         summary: 'standarts code',
-        childs: []
+        children: []
       };
       spyOn(ItemModelMock, 'createItem').and.returnValue(
         Promise.resolve(mockItem)
@@ -100,7 +100,7 @@ describe('Item controller', () => {
         retrospective: '59ce7c44534d95403f1ded42',
         category: '59ce7c44534d95403f1ded44',
         summary: 'standarts code',
-        childs: []
+        children: []
       };
       spyOn(ItemModelMock, 'deleteItem').and.returnValue(
         Promise.resolve(mockItem)

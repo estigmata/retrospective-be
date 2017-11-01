@@ -9,11 +9,17 @@ const itemSchema = {
     'summary': {
       'type': 'string'
     },
-    'childs': {
-      'type': 'array'
+    'parent': {
+      'type': 'boolean'
+    },
+    'children': {
+      'type': 'array',
+      'items': {
+        'type': 'object'
+      }
     }
   },
-  'required': ['category', 'summary']
+  'required': ['category', 'summary', 'parent']
 };
 
 module.exports = itemSchema;
