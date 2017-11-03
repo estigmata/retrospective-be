@@ -16,14 +16,17 @@ class ItemModel {
       });
   }
 
-  static newItem (params) {
+  static newItem (bodyParams) {
     const item = {
-      retrospective: params.retrospective,
-      category: params.category,
-      summary: params.summary
+      retrospective: bodyParams.retrospective,
+      category: bodyParams.category,
+      summary: bodyParams.summary,
+      parent: bodyParams.parent,
+      children: bodyParams.children ? bodyParams.children.map(child => child._id) : []
+
     };
     return Item.create(item).
-      then(itemCreated => itemCreated).
+      then(itemCreated => Item.findOne(itemCreated).populate('children')).
       catch(() => {
         const error = new Error('Item could not be saved');
         error.title = 'Internal server error';
