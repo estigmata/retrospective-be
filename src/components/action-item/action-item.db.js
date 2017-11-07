@@ -12,7 +12,7 @@ const ActionItemSchema = new Schema(
     },
     itemId: {
       type: Schema.Types.ObjectId,
-      ref: 'items'
+      ref: 'item'
     },
     summary: {
       type: String,

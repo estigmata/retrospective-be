@@ -14,7 +14,7 @@ const retrospectiveSchema = {
     },
     'currentStep': {
       'type': 'string',
-      'enum': ['add-items', 'group-items', 'vote-items', 'action-items']
+      'enum': ['add-items', 'group-items', 'vote-items', 'action-items', 'report']
     }
   }
 };

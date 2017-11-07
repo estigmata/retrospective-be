@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
-const retrospectiveSteps = ['add-items', 'vote-items', 'group-items', 'action-items'];
+const retrospectiveSteps = ['add-items', 'vote-items', 'group-items', 'action-items', 'report'];
 
 const RetrospectiveSchema = new Schema(
   {

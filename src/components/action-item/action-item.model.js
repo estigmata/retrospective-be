@@ -27,8 +27,7 @@ class ItemModel {
   }
 
   static getActionItemsByQuery (query) {
-    console.log('Model AI: ', query);
-    return ActionItem.find(query);
+    return ActionItem.find(query).populate({ path: 'itemId', populate: { path: 'children' } });
   }
 
   static getActionItemById (actionItemId) {
