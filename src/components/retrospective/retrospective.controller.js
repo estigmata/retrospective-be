@@ -13,9 +13,9 @@ class RetrospectiveController {
   }
 
   static addNewRetrospective (req, res, next) {
-    return RetrospectiveModel.createRetrospective(req.body).
-      then(retrospective => res.send({ data: retrospective }).status(200)).
-      catch(err => next(err));
+    return RetrospectiveBussinesLogic.createNewRetrospective(req.body)
+      .then(retrospective => res.send({ data: retrospective }).status(200))
+      .catch(err => next(err));
   }
 
   static getRetrospectives (req, res, next) {
@@ -38,6 +38,14 @@ class RetrospectiveController {
     return RetrospectiveBussinesLogic.goToNextRetrospectiveStep(req.params.retrospectiveId)
       .then(retrospectiveUpdated => {
         res.send({ data: retrospectiveUpdated }).status(200);
+      })
+      .catch(err => next(err));
+  }
+
+  static getNewNameOfRetrospective (req, res, next) {
+    return RetrospectiveBussinesLogic.generateNameOfNewRetrospective()
+      .then(retrospectiveName => {
+        res.send({ name: retrospectiveName }).status(200);
       })
       .catch(err => next(err));
   }

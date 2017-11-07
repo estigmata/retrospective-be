@@ -29,16 +29,7 @@ class RetrospectiveModel {
   }
 
   static getRetrospectiveByQuery (query) {
-    return Retrospective.find(query).
-      then(retrospectives => {
-        if (!retrospectives.length) {
-          const error = new Error('The retrospectives with those params do not exist');
-          error.title = 'Retrospective not found';
-          error.status = 404;
-          throw error;
-        }
-        return retrospectives;
-      });
+    return Retrospective.find(query);
   }
 
   static updateRetrospective (retrospectiveId, body) {
@@ -52,6 +43,13 @@ class RetrospectiveModel {
         }
         return RetrospectiveUpdated;
       });
+  }
+
+  static getNumberofRetrospectives () {
+    return Retrospective.count()
+      .then(numberOfRetrospectives => {
+        return numberOfRetrospectives;
+      })
   }
 
 }

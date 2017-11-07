@@ -16,6 +16,7 @@ class ActionItemController {
   }
 
   static getActionItems (req, res, next) {
+    console.log('Controller AI: ', req.query);
     return ActionItemModel.getActionItemsByQuery(req.query).
       then(actionItems => res.send({ data: actionItems }).status(200)).
       catch(next);

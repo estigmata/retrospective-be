@@ -27,6 +27,7 @@ class ItemModel {
   }
 
   static getActionItemsByQuery (query) {
+    console.log('Model AI: ', query);
     return ActionItem.find(query);
   }
 
