@@ -2,7 +2,6 @@
 const express = require('express');
 const RetrospectiveController = require('./retrospective.controller');
 const retrospectiveSchema = require('./retrospective-schema');
-
 const { validateSchema } = require('./../../middleware/schema-validation.middleware');
 
 const router = express.Router();

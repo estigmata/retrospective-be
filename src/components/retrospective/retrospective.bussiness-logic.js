@@ -8,8 +8,10 @@ class RetrospectiveBussinesLogic {
     return RetrospectiveModel.getRetrospective(retrospectiveId)
       .then(retrospective => {
         const oldStepIndex = RetrospectiveData.retrospectiveSteps.findIndex(step => step === retrospective.currentStep);
-        const newStepIndex = oldStepIndex === RetrospectiveData.retrospectiveSteps.length - 1 ? oldStepIndex : oldStepIndex + 1;
+        const newStepIndex =
+          oldStepIndex === RetrospectiveData.retrospectiveSteps.length - 1 ? oldStepIndex : oldStepIndex + 1;
         retrospective.currentStep = RetrospectiveData.retrospectiveSteps[newStepIndex];
+        retrospective.done = retrospective.currentStep === 'report';
         return RetrospectiveModel.updateRetrospective(retrospectiveId, retrospective);
       })
       .then(retrospectiveUpdated => {

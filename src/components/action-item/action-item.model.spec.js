@@ -6,6 +6,7 @@ class ActionItemDbMock {
   static findById () {}
   static create () {}
   static find () {}
+  static populate () {}
   static findByIdAndRemove () {}
   static findByIdAndUpdate () {}
 }
@@ -156,7 +157,8 @@ describe('Action Item Model', () => {
 
   describe('Get Retrospectives called by query params', () => {
     it('should return a retrospective with the _id = 59cc47301c319d178c5f4012', done => {
-      spyOn(ActionItemDbMock, 'find').and.returnValue(
+      spyOn(ActionItemDbMock, 'find').and.returnValue(ActionItemDbMock);
+      spyOn(ActionItemDbMock, 'populate').and.returnValue(
         Promise.resolve({
           _id: '59cc47301c319d178c5f4012',
           summary: 'updated action item'
@@ -169,4 +171,5 @@ describe('Action Item Model', () => {
         });
     });
   });
+
 });

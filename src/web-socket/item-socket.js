@@ -1,17 +1,19 @@
 'use strict';
+const EventEmitter = require('./../events/event-emitter');
 
 module.exports = io => {
-  io.on('connection', socket => {
-    socket.on('onSaveItem', item => {
-      io.sockets.emit('itemSaved', item);
+  io.on('connection', () => {
+
+    EventEmitter.on('ItemSaved', item => {
+      io.sockets.emit('onItemSaved', { data: item });
     });
 
-    socket.on('onUpdateItem', item => {
-      io.sockets.emit('itemUpdated', item);
+    EventEmitter.on('ItemUpdated', item => {
+      io.sockets.emit('onUpdateItem', { data: item });
     });
 
-    socket.on('onDeleteItem', item => {
-      io.sockets.emit('itemDeleted', item);
+    EventEmitter.on('ItemDeleted', item => {
+      io.sockets.emit('onDeleteItem', { data: item });
     });
   });
 };

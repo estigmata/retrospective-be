@@ -4,7 +4,15 @@ const itemSchema = {
   'type': 'object',
   'properties': {
     'category': {
-      'type': 'string'
+      'type': 'object',
+      'properties': {
+        '_id': {
+          'type': 'string'
+        },
+        'name': {
+          'type': 'string'
+        }
+      }
     },
     'summary': {
       'type': 'string'
@@ -17,9 +25,12 @@ const itemSchema = {
       'items': {
         'type': 'object'
       }
+    },
+    'user': {
+      'type': 'string'
     }
   },
-  'required': ['category', 'summary', 'parent']
+  'required': ['category', 'parent', 'user']
 };
 
 module.exports = itemSchema;

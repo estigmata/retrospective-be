@@ -2,10 +2,15 @@
 const mockery = require('mockery');
 let RetrospectiveController;
 
+class RetrospectiveBussinessLogicMock {
+  static generateNameOfNewRetrospective () {}
+}
+
 class RetrospectiveModelMock {
   static getRetrospective () {}
   static createRetrospective () {}
   static getRetrospectiveByQuery () {}
+  static getNumberofRetrospectives () {}
 }
 
 const res = {
@@ -21,6 +26,7 @@ describe('Retrospective controller', () => {
       useCleanCache: true
     });
     mockery.registerMock('./retrospective.model', RetrospectiveModelMock);
+    mockery.registerMock('./retrospective.bussiness-logic.js', RetrospectiveBussinessLogicMock);
     RetrospectiveController = require('./retrospective.controller');
   });
 
@@ -53,6 +59,12 @@ describe('Retrospective controller', () => {
 
   describe('Post a new retrospective controller', () => {
     it('should return the new retrospective', done => {
+      spyOn(RetrospectiveModelMock, 'getNumberofRetrospectives').and.returnValue(
+        Promise.resolve()
+      );
+      spyOn(RetrospectiveBussinessLogicMock, 'generateNameOfNewRetrospective').and.returnValue(
+        Promise.resolve()
+      );
       spyOn(res, 'status').and.callThrough();
       spyOn(res, 'send');
       const mockCategory = {

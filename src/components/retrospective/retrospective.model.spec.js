@@ -118,16 +118,19 @@ describe('Retrospective Model', () => {
         });
 
     });
+
     it('should return a error title with error message', done => {
+      const error = new Error('The retrospectives with those params do not exist');
+      error.title = 'Retrospective not found';
       spyOn(RetrospectiveDbMock, 'find').and.returnValue(
-        Promise.resolve([])
+        Promise.reject(error)
       );
-      RetrospectiveModel.getRetrospectiveByQuery({ _id: 'incorrecto' }).
+      RetrospectiveModel.getRetrospectiveByQuery({ _id: '59cd078e9ea150295094935a' }).
+        then(() => {}).
         catch(err => {
           expect(RetrospectiveDbMock.find).toHaveBeenCalled();
           expect(err.message).toEqual('The retrospectives with those params do not exist');
           expect(err.title).toEqual('Retrospective not found');
-          expect(err.status).toEqual(404);
           done();
         });
     });

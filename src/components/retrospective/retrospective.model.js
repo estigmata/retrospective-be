@@ -49,7 +49,7 @@ class RetrospectiveModel {
     return Retrospective.count()
       .then(numberOfRetrospectives => {
         return numberOfRetrospectives;
-      })
+      });
   }
 
 }

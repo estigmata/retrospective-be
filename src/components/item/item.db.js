@@ -1,6 +1,6 @@
 'use strict';
 /*eslint-disable no-use-before-define*/
-
+const EventEmitter = require('./../../events/event-emitter');
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -11,11 +11,15 @@ const ItemSchema = new Schema(
       ref: 'retrospective'
     },
     category: {
-      type: Schema.Types.ObjectId
+      _id: {
+        type: String
+      },
+      name: {
+        type: String
+      }
     },
     summary: {
       type: String,
-      required: true,
       trim: true
     },
     parent: {
@@ -40,7 +44,12 @@ const ItemSchema = new Schema(
           required: true
         }
       }
-    ]
+    ],
+    user: {
+      type: String,
+      trim: true,
+      required: true
+    }
   }
 );
 
@@ -84,6 +93,18 @@ ItemSchema.methods.updateRate = function (options) {
       return itemUpdatedByUser;
     });
 };
+
+ItemSchema.post('save', item => {
+  EventEmitter.emit('ItemSaved', item);
+});
+
+ItemSchema.post('findOneAndUpdate', item => {
+  EventEmitter.emit('ItemUpdated', item);
+});
+
+ItemSchema.post('findOneAndRemove', item => {
+  EventEmitter.emit('ItemDeleted', item);
+});
 
 const Item = mongoose.model('item', ItemSchema);
 

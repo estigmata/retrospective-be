@@ -7,7 +7,7 @@ class RetrospectiveModelMock {
 }
 
 class ItemModelMock {
-  static createItem () {}
+  static newItem () {}
   static deleteItem () {}
 }
 
@@ -41,7 +41,7 @@ describe('Item controller', () => {
         summary: 'standarts code',
         children: []
       };
-      spyOn(ItemModelMock, 'createItem').and.returnValue(
+      spyOn(ItemModelMock, 'newItem').and.returnValue(
         Promise.resolve(mockItem)
       );
 
@@ -57,16 +57,16 @@ describe('Item controller', () => {
         }
       };
 
-      ItemController.addNewItem(req, res, next).
+      ItemController.newItem(req, res, next).
         then(() => {
-          expect(ItemModelMock.createItem).toHaveBeenCalled();
+          expect(ItemModelMock.newItem).toHaveBeenCalled();
           expect(res.send).toHaveBeenCalledWith({ data: mockItem });
           done();
         });
     });
 
     it('Should fail with an internal server error when trying to create item', done => {
-      spyOn(ItemModelMock, 'createItem').and.returnValue(Promise.reject({ status: 500 }));
+      spyOn(ItemModelMock, 'newItem').and.returnValue(Promise.reject({ status: 500 }));
       spyOn(res, 'send');
       const next = jasmine.createSpy('next');
 
@@ -80,9 +80,9 @@ describe('Item controller', () => {
         }
       };
 
-      ItemController.addNewItem(req, res, next)
+      ItemController.newItem(req, res, next)
         .then(() => {
-          expect(ItemModelMock.createItem).toHaveBeenCalled();
+          expect(ItemModelMock.newItem).toHaveBeenCalled();
           expect(next).toHaveBeenCalledWith({
             status: 500
           });

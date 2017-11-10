@@ -5,16 +5,6 @@ const RetrospectiveModel = require('./../retrospective/retrospective.model');
 const objectID = require('mongodb').ObjectID;
 
 class ItemModel {
-  static createItem (item) {
-    return Item.create(item).
-      then(itemCreated => Item.findOne(itemCreated).populate('children')).
-      catch(() => {
-        const error = new Error('Item could not be saved');
-        error.title = 'Internal server error';
-        error.status = 500;
-        throw error;
-      });
-  }
 
   static newItem (bodyParams) {
     const item = {
@@ -22,8 +12,8 @@ class ItemModel {
       category: bodyParams.category,
       summary: bodyParams.summary,
       parent: bodyParams.parent,
-      children: bodyParams.children ? bodyParams.children.map(child => child._id) : []
-
+      children: bodyParams.children ? bodyParams.children.map(child => child._id) : [],
+      user: bodyParams.user
     };
     return Item.create(item).
       then(itemCreated => Item.findOne(itemCreated).populate('children')).
@@ -55,7 +45,7 @@ class ItemModel {
   }
 
   static getItemsByQuery (query) {
-    return Item.find(query).populate('children');
+    return Item.find(query).populate({ path: 'children' });
   }
 
   static getItem (itemId) {
@@ -68,25 +58,6 @@ class ItemModel {
           throw error;
         }
         return itemFound;
-      });
-  }
-
-  static updateItemRate (itemId, userId, itemRate) {
-    let itemFound;
-    return ItemModel.getItem(itemId).
-      then(item => {
-        itemFound = item;
-        return RetrospectiveModel.getRetrospective(itemFound.retrospective);
-      }).
-      then(retrospective => {
-        itemRate.retrospectiveRate = retrospective.maxRate;
-        return itemFound.updateRate({ userId, itemRate });
-      }).
-      catch(errorDescription => {
-        const error = new Error(errorDescription);
-        error.title = 'Rate out of range';
-        error.status = 400;
-        throw error;
       });
   }
 
