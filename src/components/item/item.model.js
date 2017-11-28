@@ -7,17 +7,21 @@ const objectID = require('mongodb').ObjectID;
 class ItemModel {
 
   static newItem (bodyParams) {
-    const item = {
-      retrospective: bodyParams.retrospective,
-      category: bodyParams.category,
-      summary: bodyParams.summary,
-      parent: bodyParams.parent,
-      children: bodyParams.children ? bodyParams.children.map(child => child._id) : [],
-      user: bodyParams.user
-    };
-    return Item.create(item).
-      then(itemCreated => Item.findOne(itemCreated).populate('children')).
-      catch(() => {
+    return RetrospectiveModel.getRetrospective(bodyParams.retrospective)
+      .then(retrospective => {
+        const item = {
+          retrospective: bodyParams.retrospective,
+          category: bodyParams.category,
+          summary: bodyParams.summary,
+          parent: bodyParams.parent,
+          children: bodyParams.children ? bodyParams.children.map(child => child._id) : [],
+          user: bodyParams.user,
+          color: retrospective.users.find(user => user.userId._id.toString() === bodyParams.user.toString()).color
+        };
+        return Item.create(item);
+      })
+      .then(itemCreated => Item.findOne(itemCreated).populate({ path: 'children user' }))
+      .catch(() => {
         const error = new Error('Item could not be saved');
         error.title = 'Internal server error';
         error.status = 500;
@@ -45,12 +49,12 @@ class ItemModel {
   }
 
   static getItemsByQuery (query) {
-    return Item.find(query).populate({ path: 'children' });
+    return Item.find(query).populate({ path: 'children user' });
   }
 
   static getItem (itemId) {
-    return Item.findById(itemId).
-      then(itemFound => {
+    return Item.findById(itemId).populate({ path: 'children user' })
+      .then(itemFound => {
         if (!itemFound) {
           const error = new Error('Item could not be found');
           error.title = 'Item not found';
@@ -93,13 +97,13 @@ class ItemModel {
           error.status = 404;
           throw error;
         }
-        return Item.findOne(itemUdated).populate('children');
+        return Item.findOne(itemUdated).populate({ path: 'children user' });
       });
   }
 
   static getItemsWithRatesByUser (retrospectiveId, userId) {
     return Item.find({ retrospective: objectID(retrospectiveId) }).
-      populate('children').
+      populate({ path: 'children user' }).
       then(items => items.map(item => {
         const rate = item.rates.map(itemRate => {
           if (itemRate.user === userId) {
@@ -115,7 +119,9 @@ class ItemModel {
           'rates': item.rates,
           'children': item.children,
           'parent': item.parent,
-          'userRate': rate.length === 1 ? rate[0] : 0
+          'userRate': rate.length === 1 ? rate[0] : 0,
+          'user': item.user,
+          'color': item.color
         };
       }));
   }

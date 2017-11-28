@@ -43,9 +43,23 @@ class RetrospectiveController {
   }
 
   static getNewNameOfRetrospective (req, res, next) {
-    return RetrospectiveBussinesLogic.generateNameOfNewRetrospective()
+    return RetrospectiveBussinesLogic.generateNameOfNewRetrospective(req.params.teamId)
       .then(retrospectiveName => {
         res.send({ name: retrospectiveName }).status(200);
+      })
+      .catch(err => next(err));
+  }
+
+  static addUserInToRetrospective (req, res, next) {
+    const addUserOperation = req.body.userId
+      ? RetrospectiveBussinesLogic.addExistingUser(req.params.retrospectiveId, req.body.userId)
+      : RetrospectiveBussinesLogic.addNewUser(req.params.retrospectiveId, res);
+
+    return addUserOperation
+      .then(userIdAndColor => {
+        res.send({
+          data: userIdAndColor
+        }).status(200);
       })
       .catch(err => next(err));
   }

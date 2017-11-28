@@ -4,4 +4,4 @@
 /.vscode
 /package-lock.json
 npm-debug.log
-/*.orig
+**/*.orig

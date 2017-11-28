@@ -4,7 +4,8 @@ const Retrospective = require('./retrospective.db');
 class RetrospectiveModel {
 
   static getRetrospective (retroId) {
-    return Retrospective.findById(retroId, 'name categories maxRate currentStep').
+    return Retrospective.findById(retroId, 'name categories maxRate currentStep users.userId users.color')
+      .populate({ path: 'users.userId' }).
       then(retrospective => {
         if (!retrospective) {
           const error = new Error('The retrospective with that id does not exist');
@@ -45,10 +46,37 @@ class RetrospectiveModel {
       });
   }
 
-  static getNumberofRetrospectives () {
-    return Retrospective.count()
+  static getNumberofRetrospectives (teamId) {
+    return Retrospective.count({team: teamId})
       .then(numberOfRetrospectives => {
         return numberOfRetrospectives;
+      });
+  }
+
+  static addUser (retrospectiveId, user) {
+    return Retrospective.findByIdAndUpdate(retrospectiveId, { $push: { users: user } }, { new: true })
+      .populate({ path: 'users.userId' })
+      .then(retrospectiveUpdate => {
+        if (!retrospectiveUpdate) {
+          const error = new Error('Retrospective could not be updated');
+          error.title = 'Retrospective not found';
+          error.status = 404;
+          throw error;
+        }
+        return retrospectiveUpdate.users[retrospectiveUpdate.users.length - 1];
+      });
+  }
+
+  static findOneUser (retrospectiveId, userId) {
+    return Retrospective.findById(retrospectiveId).populate({ path: 'users.userId' })
+      .then(retrospective => {
+        if (!retrospective) {
+          const error = new Error('Retrospective could not be updated');
+          error.title = 'Retrospective not found';
+          error.status = 404;
+          throw error;
+        }
+        return retrospective.users.find(user => user.userId._id.toString() === userId.toString());
       });
   }
 

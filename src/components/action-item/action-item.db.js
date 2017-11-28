@@ -1,4 +1,5 @@
 'use strict';
+const ActionItemEventEmitter = require('./../../events/action-item-event-emitter');
 
 const mongoose = require('mongoose');
 
@@ -21,5 +22,13 @@ const ActionItemSchema = new Schema(
     }
   }
 );
+
+ActionItemSchema.post('save', actionItem => {
+  ActionItemEventEmitter.emit('ActionItemSaved', actionItem);
+});
+
+ActionItemSchema.post('findOneAndUpdate', item => {
+  ActionItemEventEmitter.emit('ActionItemUpdated', item);
+});
 
 module.exports = mongoose.model('action-items', ActionItemSchema);

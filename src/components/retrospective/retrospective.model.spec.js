@@ -6,6 +6,7 @@ class RetrospectiveDbMock {
   static findById () {}
   static create () {}
   static find () {}
+  static populate () {}
 }
 
 describe('Retrospective Model', () => {
@@ -21,7 +22,8 @@ describe('Retrospective Model', () => {
 
   describe('Get one retrospective by id model', () => {
     it('should return a retrospective name and _id', done => {
-      spyOn(RetrospectiveDbMock, 'findById').and.returnValue(
+      spyOn(RetrospectiveDbMock, 'findById').and.returnValue(RetrospectiveDbMock);
+      spyOn(RetrospectiveDbMock, 'populate').and.returnValue(
         Promise.resolve({
           '_id': '59cc47301c319d178c5f4012',
           'name': 'newrestrospective'
@@ -35,7 +37,8 @@ describe('Retrospective Model', () => {
 
     });
     it('should return a error title with error message whit incorrect _id', done => {
-      spyOn(RetrospectiveDbMock, 'findById').and.returnValue(
+      spyOn(RetrospectiveDbMock, 'findById').and.returnValue(RetrospectiveDbMock);
+      spyOn(RetrospectiveDbMock, 'populate').and.returnValue(
         Promise.resolve()
       );
       RetrospectiveModel.getRetrospective('incorrectId').

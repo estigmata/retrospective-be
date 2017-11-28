@@ -1,6 +1,7 @@
 'use strict';
 /*eslint-disable no-use-before-define*/
-const EventEmitter = require('./../../events/event-emitter');
+const ItemEventEmitter = require('./../../events/item-event-emitter');
+const GroupEventEmitter = require('./../../events/group-event-emitter');
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -46,9 +47,21 @@ const ItemSchema = new Schema(
       }
     ],
     user: {
-      type: String,
-      trim: true,
-      required: true
+      type: Schema.Types.ObjectId,
+      ref: 'user'
+    },
+    color: {
+      h: {
+        type: Number
+      },
+      s: {
+        type: Number,
+        default: 80
+      },
+      l: {
+        type: Number,
+        default: 80
+      }
     }
   }
 );
@@ -76,9 +89,8 @@ ItemSchema.methods.updateRate = function (options) {
           throw error;
         }
       }
-
       return Item.findOneAndUpdate(
-        { _id: this._id, 'retrospective': this.retrospective, 'rates.user': options.userId },
+        { _id: this._id, retrospective: this.retrospective, 'rates.user': options.userId },
         { $inc: { 'rates.$.quantity': options.itemRate.voteQuantity } },
         { new: true });
     }).
@@ -95,15 +107,33 @@ ItemSchema.methods.updateRate = function (options) {
 };
 
 ItemSchema.post('save', item => {
-  EventEmitter.emit('ItemSaved', item);
+  if (item) {
+    Item.findOne({ _id: item._id }).populate({ path: 'children user' })
+      .then(itemFound => {
+        if (item.children.length > 0) {
+          GroupEventEmitter.emit('GroupSaved', itemFound);
+        } else {
+          ItemEventEmitter.emit('ItemSaved', itemFound);
+        }
+      });
+  }
 });
 
 ItemSchema.post('findOneAndUpdate', item => {
-  EventEmitter.emit('ItemUpdated', item);
+  if (item) {
+    Item.findOne({ _id: item._id }).populate({ path: 'children user' })
+      .then(itemFound => {
+        if (item.children.length > 0) {
+          GroupEventEmitter.emit('GroupUpdated', itemFound);
+        } else {
+          ItemEventEmitter.emit('ItemUpdated', itemFound);
+        }
+      });
+  }
 });
 
 ItemSchema.post('findOneAndRemove', item => {
-  EventEmitter.emit('ItemDeleted', item);
+  ItemEventEmitter.emit('ItemDeleted', item);
 });
 
 const Item = mongoose.model('item', ItemSchema);
